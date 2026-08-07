@@ -27,11 +27,14 @@ This game has 3 levels. Each level consist of a series of diffrent obstacles to 
 
 The console will show any errors in the sketch.
 
-# CHROMASIGHT — Animated PRISM-256 Intro
 
-This package keeps the existing project structure and turns the current `story` scene into a timed animated opening cutscene.
+# Changes Made
 
-**Existing assets used**
+**CHROMASIGHT — Animated PRISM-256 Intro**
+
+Added an animation scene to the existing project structure and turns the current `story` scene into a timed animated opening cutscene. So the video that we used to have after the player press start was replaced with the storyline. 
+
+***Existing assets used***
 
 The cutscene uses the same assets already referenced by your project:
 
@@ -41,7 +44,7 @@ The cutscene uses the same assets already referenced by your project:
 
 No new image assets are required.
 
-**Cutscene sequence**
+***Cutscene sequence***
 
 1. Black screen with humming/clink/boot captions.
 2. PRISM-256 screen/eye flickers on.
@@ -56,11 +59,20 @@ No new image assets are required.
    - FALLBACK TOOL: Contrast Scanner available.
 8. Continue button appears and loads the saved level.
 
-**Controls for the Animation**
+***Controls for the Animation***
 
 - `Skip` button skips the intro.
 - `Enter` or `Backspace` still skips because the original `sketch.js` input behaviour is preserved.
 - `Escape` returns to the start menu.
+
+**Block Mechanic Changes**
+
+1. We removed the block mechanic to level 3 instead of introducing it in level 2. 
+2. The instructions for using the block mechanic was move to the beginning of level 3. 
+
+**Doors**
+
+We swap the doors to a more visually appealing door. So the portals that looked like blocks are now looking like proper portals with frames. 
 
 ## Project Structure
 
