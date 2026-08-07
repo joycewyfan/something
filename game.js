@@ -30,6 +30,9 @@ const AssetPaths = Object.freeze({
   winImage: "assets/img/AllBooks.png",
   storyImage: "assets/img/storyline.png",
   storyAudio: "assets/sound/story.mp3",
+  wakeupSound: "assets/sound/Wakeup.mp3",
+  robotVoiceSound: "assets/sound/beepbeep.mp3",
+  facilitySound: "assets/sound/Facility.mp3",
   tiledStartImageLayer: "../img/Start.png",
   bgm: "assets/sound/bgm.wav",
   buttonSound: "assets/sound/buttonon.mp3",
@@ -133,7 +136,11 @@ const PhysicsConfig = Object.freeze({
 const AudioConfig = Object.freeze({
   bgmVolume: 0.5,
   soundEffectVolume: 0.3,
-  buttonSoundVolume: 1
+  buttonSoundVolume: 1,
+  storyVolume: 0.30,
+  wakeupVolume: 0.55,
+  robotVoiceVolume: 0.28,
+  facilityVolume: 0.10
 });
 
 /** Default behavior for mode blocks when the Tiled object does not override it. */
@@ -173,6 +180,13 @@ const GAME_CONFIG = {
   winImagePath: AssetPaths.winImage,
   storyImagePath: AssetPaths.storyImage,
   storyAudioPath: AssetPaths.storyAudio,
+  wakeupSoundPath: AssetPaths.wakeupSound,
+  robotVoiceSoundPath: AssetPaths.robotVoiceSound,
+  facilitySoundPath: AssetPaths.facilitySound,
+  storyVolume: AudioConfig.storyVolume,
+  wakeupVolume: AudioConfig.wakeupVolume,
+  robotVoiceVolume: AudioConfig.robotVoiceVolume,
+  facilityVolume: AudioConfig.facilityVolume,
   tiledStartImageLayerPath: AssetPaths.tiledStartImageLayer,
   bgmPath: AssetPaths.bgm,
   bgmVolume: AudioConfig.bgmVolume,
@@ -297,6 +311,8 @@ class ChromasightGame {
     this.storyStartedAt = 0;
     this.storyElapsedMs = 0;
     this.storyComplete = false;
+    this.storyWakeupPlayed = false;
+    this.lastStoryBeatIndex = -1;
     this.totalBooks = countBooksInMaps(this.assets.maps || {});
     this.collectedBookKeys = collectedBookKeysFromSave(this.assets.maps || {}, this.saveData);
     this.collectedBooks = this.collectedBookKeys.size;
@@ -392,6 +408,8 @@ class ChromasightGame {
     this.storyStartedAt = typeof millis === "function" ? millis() : Date.now();
     this.storyElapsedMs = 0;
     this.storyComplete = false;
+    this.storyWakeupPlayed = false;
+    this.lastStoryBeatIndex = -1;
     if (typeof bgm !== "undefined" && bgm && bgm.isPlaying()) bgm.stop();
     if (typeof playStoryScene === "function") playStoryScene();
   }
@@ -401,6 +419,24 @@ class ChromasightGame {
     const now = typeof millis === "function" ? millis() : Date.now();
     this.storyElapsedMs = Math.max(0, now - this.storyStartedAt);
     this.storyComplete = this.storyElapsedMs >= INTRO_CONFIG.durationMs;
+
+    // Wake-up SFX begins with the first mechanical clink.
+    if (!this.storyWakeupPlayed && this.storyElapsedMs >= 2100) {
+      this.storyWakeupPlayed = true;
+      if (typeof playWakeupSound === "function") playWakeupSound();
+    }
+
+    // Play PRISM's electronic voice beep once at the start of each dialogue beat.
+    const activeBeatIndex = INTRO_CONFIG.beats.findIndex((beat) => (
+      this.storyElapsedMs >= beat.start && this.storyElapsedMs < beat.end
+    ));
+    if (activeBeatIndex !== this.lastStoryBeatIndex) {
+      this.lastStoryBeatIndex = activeBeatIndex;
+      const beat = INTRO_CONFIG.beats[activeBeatIndex];
+      if (beat?.kind === "dialogue" && typeof playRobotVoiceSound === "function") {
+        playRobotVoiceSound();
+      }
+    }
   }
 
   /** Returns the dialogue/sound beat currently active in the cutscene. */
@@ -411,7 +447,7 @@ class ChromasightGame {
   }
 
   skipStory() {
-    if (typeof stopStoryAudio === "function") stopStoryAudio();
+    if (typeof stopStoryMedia === "function") stopStoryMedia();
 
     const levelName = this.pendingStoryLevelName || "level_1";
     const spawnName = this.pendingStorySpawnName || null;

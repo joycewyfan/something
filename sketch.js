@@ -17,6 +17,9 @@ let controlsImage;
 let winImage;
 let storyImage;
 let storyAudio;
+let wakeupSound;
+let robotVoiceSound;
+let facilitySound;
 let bgm;
 let buttonSound;
 let jumpSound;
@@ -40,6 +43,9 @@ function preload() {
   controlsImage = loadImage(GAME_CONFIG.controlsImagePath);
   winImage = loadImage(GAME_CONFIG.winImagePath);
   storyImage = loadImage(GAME_CONFIG.storyImagePath);
+  wakeupSound = loadSound(GAME_CONFIG.wakeupSoundPath);
+  robotVoiceSound = loadSound(GAME_CONFIG.robotVoiceSoundPath);
+  facilitySound = loadSound(GAME_CONFIG.facilitySoundPath);
   bgm = loadSound(GAME_CONFIG.bgmPath);
   buttonSound = loadSound(GAME_CONFIG.buttonSoundPath);
   jumpSound = loadSound(GAME_CONFIG.jumpSoundPath);
@@ -63,7 +69,10 @@ function setup() {
   for (const sound of [jumpSound, optionsSound, startscreenSound, bookSound, winSound]) {
     if (sound) sound.setVolume(GAME_CONFIG.soundEffectVolume);
   }
-  if (storyAudio) storyAudio.volume = GAME_CONFIG.soundEffectVolume;
+  if (storyAudio) storyAudio.volume = GAME_CONFIG.storyVolume;
+  if (wakeupSound) wakeupSound.setVolume(GAME_CONFIG.wakeupVolume);
+  if (robotVoiceSound) robotVoiceSound.setVolume(GAME_CONFIG.robotVoiceVolume);
+  if (facilitySound) facilitySound.setVolume(GAME_CONFIG.facilityVolume);
 
   game = new ChromasightGame({
     startMap,
@@ -98,7 +107,7 @@ function mousePressed() {
 function keyPressed() {
   if (game.scene === "story") {
     if (key === " ") {
-      playStoryAudio();
+      restartStoryAudioMix();
       return false;
     }
 
@@ -213,18 +222,42 @@ function playStartscreenSound() {
   startscreenSound.play();
 }
 
-/** Starts the story sound from the beginning. */
+/** Starts the main story music from the beginning. */
 function playStoryAudio() {
   stopMenuSounds();
   if (bgm && bgm.isPlaying()) bgm.stop();
 
   if (storyAudio) {
     storyAudio.currentTime = 0;
+    storyAudio.volume = GAME_CONFIG.storyVolume;
     storyAudio.play().catch(() => {});
   }
 }
 
-/** Stops the story sound and rewinds to the beginning. */
+/** Starts the low-volume facility ambience underneath the story music. */
+function playFacilitySound() {
+  if (!facilitySound) return;
+  facilitySound.setVolume(GAME_CONFIG.facilityVolume);
+  if (!facilitySound.isPlaying()) facilitySound.loop();
+}
+
+/** Plays the mechanical activation sound once during PRISM's wake-up. */
+function playWakeupSound() {
+  if (!wakeupSound) return;
+  if (wakeupSound.isPlaying()) wakeupSound.stop();
+  wakeupSound.setVolume(GAME_CONFIG.wakeupVolume);
+  wakeupSound.play();
+}
+
+/** Plays PRISM's electronic speech sound once when a dialogue line begins. */
+function playRobotVoiceSound() {
+  if (!robotVoiceSound) return;
+  if (robotVoiceSound.isPlaying()) robotVoiceSound.stop();
+  robotVoiceSound.setVolume(GAME_CONFIG.robotVoiceVolume);
+  robotVoiceSound.play();
+}
+
+/** Stops and rewinds the main story music. */
 function stopStoryAudio() {
   if (storyAudio) {
     storyAudio.pause();
@@ -232,17 +265,25 @@ function stopStoryAudio() {
   }
 }
 
-/** Replays the story sound while the image is on screen. */
-function toggleStoryPlayback() {
+/** Stops every sound used only by the opening cutscene. */
+function stopStoryMedia() {
+  stopStoryAudio();
+  for (const sound of [facilitySound, wakeupSound, robotVoiceSound]) {
+    if (sound && sound.isPlaying()) sound.stop();
+  }
+}
+
+/** Restarts the story mix if the player presses Space during the cutscene. */
+function restartStoryAudioMix() {
+  stopStoryMedia();
   playStoryAudio();
+  playFacilitySound();
 }
 
 function playStoryScene() {
+  stopStoryMedia();
   playStoryAudio();
-}
-
-function stopStoryMedia() {
-  stopStoryAudio();
+  playFacilitySound();
 }
 
 /** Plays the book pickup sound when a book is collected. */
