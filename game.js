@@ -137,10 +137,10 @@ const AudioConfig = Object.freeze({
   bgmVolume: 0.5,
   soundEffectVolume: 0.3,
   buttonSoundVolume: 1,
-  storyVolume: 0.30,
+  storyVolume: 0.01,
   wakeupVolume: 0.55,
   robotVoiceVolume: 0.28,
-  facilityVolume: 0.10
+  facilityVolume: 0.01
 });
 
 /** Default behavior for mode blocks when the Tiled object does not override it. */
